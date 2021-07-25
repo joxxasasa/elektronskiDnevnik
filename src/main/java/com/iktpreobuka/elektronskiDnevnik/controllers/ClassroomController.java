@@ -9,6 +9,7 @@ import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -37,6 +38,7 @@ public class ClassroomController {
 	@Autowired
 	private ClassroomDAOImpl classroomDAOImpl;
 
+	@Secured("ROLE_ADMIN")
 	@PostMapping("/createClassroom")
 	public ResponseEntity<?> createClassroom(@Valid @RequestBody ClassroomDTO newClassroomDTO) {
 		try {
@@ -54,6 +56,7 @@ public class ClassroomController {
 		}
 	}
 
+	@Secured("ROLE_ADMIN")
 	@PutMapping("/changeClassroom/{classroomId}")
 	public ResponseEntity<?> changeClassroom(@PathVariable Integer classroomId,
 			@RequestBody ClassroomDTO changedClassroomDTO) {
@@ -72,6 +75,7 @@ public class ClassroomController {
 		}
 	}
 
+	@Secured("ROLE_ADMIN")
 	@GetMapping("/findAllClassrooms")
 	public ResponseEntity<?> findAllClassrooms() {
 		try {
@@ -100,4 +104,6 @@ public class ClassroomController {
 		});
 		return errors;
 	}
+	
+	
 }
