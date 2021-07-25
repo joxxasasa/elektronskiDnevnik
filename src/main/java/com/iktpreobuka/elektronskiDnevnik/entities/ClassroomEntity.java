@@ -10,6 +10,8 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -23,8 +25,11 @@ public class ClassroomEntity {
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Integer id;
 	
+	@NotNull(message = "ClassroomNumber must not be null!")
+	@Max(value = 8, message = "ClassroomNumber can be max {value}!")
 	private Integer classroomNumber;
 	
+	@NotNull(message = "ClassroomMark must not be null!")
 	private Integer classroomMark;
 	
 	@OneToMany(mappedBy = "classroom", cascade = CascadeType.REFRESH, fetch = FetchType.LAZY)

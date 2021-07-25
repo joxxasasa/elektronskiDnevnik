@@ -6,7 +6,8 @@ import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 
-import org.springframework.beans.BeanUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,6 +27,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.iktpreobuka.elektronskiDnevnik.controllers.util.RESTError;
+import com.iktpreobuka.elektronskiDnevnik.controllers.util.UserCustomValidator;
 import com.iktpreobuka.elektronskiDnevnik.entities.ParentEntity;
 import com.iktpreobuka.elektronskiDnevnik.entities.RoleEntity;
 import com.iktpreobuka.elektronskiDnevnik.entities.StudentEntity;
@@ -42,6 +44,8 @@ import com.iktpreobuka.elektronskiDnevnik.services.UserDAOImpl;
 @RestController
 @RequestMapping(value = "/users")
 public class UserController {
+	
+	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 	
 	@Autowired
 	private UserRepository userRepository;
@@ -61,13 +65,13 @@ public class UserController {
 	@Autowired
 	private StudentRepository studentRepository;
 	
-//	@Autowired
-//	private UserCustomValidator userCustomValidator;
-//
-//	@InitBinder
-//	protected void initBinder(final WebDataBinder binder) {
-//		binder.addValidators(userCustomValidator);
-//	}
+	@Autowired
+	private UserCustomValidator userCustomValidator;
+
+	@InitBinder("newUser")
+	protected void initBinder(final WebDataBinder binder) {
+		binder.addValidators(userCustomValidator);
+	}
 	
 //	@PostMapping()
 //	public ResponseEntity<?> createUser(@Valid @RequestBody UserEntity user, BindingResult result) {
@@ -82,13 +86,30 @@ public class UserController {
 	
 	
 	@PostMapping("/createUser/{roleId}")
-	public ResponseEntity<?> createUser(/*@Valid*/ @RequestBody UserEntityDTO newUser, @PathVariable Integer roleId/*, BindingResult result*/) {
-//		if(result.hasErrors()) {
-//			return new ResponseEntity<RESTError>( new RESTError(1, "User can not be created"), HttpStatus.NO_CONTENT);
-//		}
+	public ResponseEntity<?> createUser(@Valid @RequestBody UserEntityDTO newUser, @PathVariable Integer roleId, BindingResult result) {
+		if(result.hasErrors()) {
+			return new ResponseEntity<>(createErrorMessage(result), HttpStatus.NO_CONTENT);
+		} else {
+			userCustomValidator.validate(newUser, result);
+		}
+
 	
-				UserEntity user = userDAOImpl.createNewUser(newUser, roleId);
-				
+//				UserEntity user = userDAOImpl.createNewUser(newUser, roleId);
+		UserEntity user = new UserEntity();
+		//if(newUserDTO.getPassword().equals(newUserDTO.getConfirmPassword())) {
+			user.setPassword(newUser.getPassword());
+//			} else {
+//				return null;
+//				}
+		user.setUsername(newUser.getUsername());
+		user.setName(newUser.getName());
+		user.setLastname(newUser.getLastname());
+		user.setEmail(newUser.getEmail());
+		user.setActive(newUser.isActive());
+		RoleEntity role = roleRepository.findById(roleId).get();
+		user.setRole(role);
+		userRepository.save(user);
+		
 				if(user.getRole().equals(roleRepository.findById(11).get())) {
 					TeacherEntity teacher = new TeacherEntity();
 					teacher.setUsername(newUser.getUsername());
@@ -98,7 +119,6 @@ public class UserController {
 					teacher.setEmail(newUser.getEmail());
 					teacher.setActive(newUser.isActive());
 					teacher.setRole(roleRepository.findById(roleId).get());
-//					return teacher;
 					teacherRepository.save(teacher);
 				}
 				if(user.getRole().equals(roleRepository.findById(12).get())) {
@@ -110,7 +130,6 @@ public class UserController {
 					teacher.setEmail(newUser.getEmail());
 					teacher.setActive(newUser.isActive());
 					teacher.setRole(roleRepository.findById(roleId).get());
-//					return teacher;
 					teacherRepository.save(teacher);
 				}
 				if(user.getRole().equals(roleRepository.findById(13).get())) {
@@ -122,7 +141,6 @@ public class UserController {
 					student.setEmail(newUser.getEmail());
 					student.setActive(newUser.isActive());
 					student.setRole(roleRepository.findById(roleId).get());
-//					return student;
 					studentRepository.save(student);
 				}
 				if(user.getRole().equals(roleRepository.findById(14).get())) {
@@ -135,29 +153,28 @@ public class UserController {
 					parent.setActive(newUser.isActive());
 					parent.setRole(roleRepository.findById(roleId).get());
 //					return parent;
-					parentRepository.save(parent);
 				}
 		return new ResponseEntity<UserEntity>(user, HttpStatus.OK);
 			
 	
 	}
 
-//	private String createErrorMessage(BindingResult result) {
-//		return result.getAllErrors().stream().map(ObjectError::getDefaultMessage).collect(Collectors.joining(" \n"));
-//	}
-//	
-//
-//	@ResponseStatus(HttpStatus.BAD_REQUEST)
-//	@ExceptionHandler(MethodArgumentNotValidException.class)
-//	public Map<String, String> handleValidationExceptions(MethodArgumentNotValidException ex) {
-//		Map<String, String> errors = new HashMap<>();
-//		ex.getBindingResult().getAllErrors().forEach((error) -> {
-//			String fieldName = ((FieldError) error).getField();
-//			String errorMessage = error.getDefaultMessage();
-//			errors.put(fieldName, errorMessage);
-//		});
-//		return errors;
-//	}
+	private String createErrorMessage(BindingResult result) {
+		return result.getAllErrors().stream().map(ObjectError::getDefaultMessage).collect(Collectors.joining(" \n"));
+	}
+	
+
+	@ResponseStatus(HttpStatus.BAD_REQUEST)
+	@ExceptionHandler(MethodArgumentNotValidException.class)
+	public Map<String, String> handleValidationExceptions(MethodArgumentNotValidException ex) {
+		Map<String, String> errors = new HashMap<>();
+		ex.getBindingResult().getAllErrors().forEach((error) -> {
+			String fieldName = ((FieldError) error).getField();
+			String errorMessage = error.getDefaultMessage();
+			errors.put(fieldName, errorMessage);
+		});
+		return errors;
+	}
 
 	@PatchMapping("/changeUser/userId/{userId}/roleId/{roleId}")
 	public ResponseEntity<?> changeUser(@PathVariable Integer userId, @PathVariable Integer roleId,
@@ -236,5 +253,6 @@ public class UserController {
 		return new ResponseEntity<UserEntity>(user, HttpStatus.OK);
 
 	}
+	
 
 }

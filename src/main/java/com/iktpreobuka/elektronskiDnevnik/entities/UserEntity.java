@@ -1,6 +1,7 @@
 package com.iktpreobuka.elektronskiDnevnik.entities;
 
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
@@ -11,6 +12,9 @@ import javax.persistence.InheritanceType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import javax.validation.constraints.Email;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
 
 
 @Entity
@@ -23,7 +27,7 @@ public class UserEntity {
 	protected Integer id;
 	
 	protected String username;
-	
+
 	protected String password;
 	
 	protected String name;

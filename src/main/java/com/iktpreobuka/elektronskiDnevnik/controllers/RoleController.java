@@ -48,7 +48,7 @@ public class RoleController {
 				RoleEntity role = roleDAOImpl.createRole(newRole);
 				return new ResponseEntity<RoleEntity>(role, HttpStatus.OK);
 			}
-			return new ResponseEntity<RESTError>(new RESTError(1, "Subject can not be crated"), HttpStatus.NO_CONTENT);
+			return new ResponseEntity<RESTError>(new RESTError(1, "Role can not be crated"), HttpStatus.NO_CONTENT);
 		} catch (Exception e) {
 			return new ResponseEntity<RESTError>(
 					new RESTError(2, "While requesting user from DB error ocured. Error message " + e.getMessage()

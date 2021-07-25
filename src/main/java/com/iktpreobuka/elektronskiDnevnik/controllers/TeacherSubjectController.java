@@ -46,5 +46,7 @@ public class TeacherSubjectController {
 					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
+	
+	
 
 }

@@ -13,7 +13,7 @@ import com.iktpreobuka.elektronskiDnevnik.repositories.StudentRepository;
 import com.iktpreobuka.elektronskiDnevnik.repositories.TeacherSubjectClassroomRepository;
 
 @Service
-public class GradeDAOImpl {
+public class GradeDAOImpl implements GradeDAO{
 	
 	@Autowired
 	private StudentRepository studentRepository;
