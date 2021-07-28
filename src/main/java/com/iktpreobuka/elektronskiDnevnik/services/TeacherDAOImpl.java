@@ -31,6 +31,16 @@ public class TeacherDAOImpl implements TeacherDAO{
 		
 	}
 	
-	
+	@Override
+	public List<TeacherEntity> findTeachersBySubjectAndClassroom(Integer subject, Integer classroom) {
+		String sql = "select t from TeacherEntity t left join fetch t.teacherSubjects tss left join fetch tss.teacherSubjectClassrooms tsc WHERE tss.subject.id = :subject and tsc.classroom.id = :classroom";
+		Query query = em.createQuery(sql);
+		query.setParameter("subject", subject);
+		query.setParameter("classroom", classroom);
+		
+		List<TeacherEntity> retVals = query.getResultList();
+		
+		return retVals;
+	}
 
 }

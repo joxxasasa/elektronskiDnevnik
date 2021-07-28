@@ -12,7 +12,7 @@ public class GradeEntityDTO {
 	
 	@NotNull(message = "Grade value must be provided!")
 	@Max(value = 5, message = "Max value can be max {value}!")
-	@Min(value = 5, message = "Min value can be min {value}!")
+	@Min(value = 1, message = "Min value can be min {value}!")
 	private Integer value;
 
 	public GradeEntityDTO() {

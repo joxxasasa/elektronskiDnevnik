@@ -1,8 +1,11 @@
 package com.iktpreobuka.elektronskiDnevnik.services;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.neo4j.Neo4jProperties.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.iktpreobuka.elektronskiDnevnik.entities.RoleEntity;
@@ -20,13 +23,9 @@ public class UserDAOImpl implements UserDAO{
 	@Autowired
 	private RoleRepository roleRepository;
 	
-	public UserEntity createNewUser(@Valid UserEntityDTO newUserDTO, Integer roleId) {
+	public UserEntity createNewUser(UserEntityDTO newUserDTO, Integer roleId) {
 		UserEntity user = new UserEntity();
-		//if(newUserDTO.getPassword().equals(newUserDTO.getConfirmPassword())) {
-			user.setPassword(newUserDTO.getPassword());
-//			} else {
-//				return null;
-//				}
+		
 		user.setUsername(newUserDTO.getUsername());
 		user.setName(newUserDTO.getName());
 		user.setLastname(newUserDTO.getLastname());
@@ -64,6 +63,10 @@ public class UserDAOImpl implements UserDAO{
 			user.setRole(roleRepository.findById(roleId).get());
 		}
 		return user;
+	}
+	
+	public String getUsername(HttpServletRequest request) {
+		return request.getUserPrincipal().getName();
 	}
 
 }

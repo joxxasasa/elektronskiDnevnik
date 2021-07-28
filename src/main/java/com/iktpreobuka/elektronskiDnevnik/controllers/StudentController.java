@@ -5,6 +5,8 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -66,6 +68,24 @@ public class StudentController {
 				return new ResponseEntity<RESTError>(new RESTError(1, "Parent not found"), HttpStatus.NOT_FOUND);
 			}
 			return new ResponseEntity<RESTError>(new RESTError(1, "Student not found"), HttpStatus.NOT_FOUND);
+
+		} catch (Exception e) {
+			return new ResponseEntity<RESTError>(
+					new RESTError(2, "While requesting user from DB error ocured. Error message " + e.getMessage()
+							+ e.getStackTrace() + ".\n Stack trace:	"), HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+	
+	@Secured("ROLE_ADMIN")
+	@GetMapping("/findAllByClassroom/{classroomId}")
+	public ResponseEntity<?> findAllByClassroomId(@PathVariable Integer classroomId) {
+		try {
+			if (classroomRepository.existsById(classroomId)) {
+				
+				List<StudentEntity> studentsInClassroom = studentRepository.findByClassroomId(classroomId);
+					return new ResponseEntity<List<StudentEntity>>(studentsInClassroom, HttpStatus.OK);
+				}
+			return new ResponseEntity<RESTError>(new RESTError(1, "Classroom can not be found"), HttpStatus.NOT_FOUND);
 
 		} catch (Exception e) {
 			return new ResponseEntity<RESTError>(

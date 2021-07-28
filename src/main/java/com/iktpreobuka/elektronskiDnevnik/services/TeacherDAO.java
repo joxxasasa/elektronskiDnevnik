@@ -8,4 +8,6 @@ public interface TeacherDAO {
 	
 	public List<TeacherEntity> findTeachersBySubject(Integer subject);
 
+	List<TeacherEntity> findTeachersBySubjectAndClassroom(Integer subject, Integer classroom);
+
 }

@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
 import org.slf4j.Logger;
@@ -11,12 +13,16 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -29,7 +35,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.iktpreobuka.elektronskiDnevnik.controllers.util.RESTError;
 import com.iktpreobuka.elektronskiDnevnik.controllers.util.UserCustomValidator;
 import com.iktpreobuka.elektronskiDnevnik.entities.ParentEntity;
-import com.iktpreobuka.elektronskiDnevnik.entities.RoleEntity;
 import com.iktpreobuka.elektronskiDnevnik.entities.StudentEntity;
 import com.iktpreobuka.elektronskiDnevnik.entities.TeacherEntity;
 import com.iktpreobuka.elektronskiDnevnik.entities.UserEntity;
@@ -84,31 +89,20 @@ public class UserController {
 //	}
 
 	
-	
+	@Secured("ROLE_ADMIN")
 	@PostMapping("/createUser/{roleId}")
 	public ResponseEntity<?> createUser(@Valid @RequestBody UserEntityDTO newUser, @PathVariable Integer roleId, BindingResult result) {
+		
 		if(result.hasErrors()) {
 			return new ResponseEntity<>(createErrorMessage(result), HttpStatus.NO_CONTENT);
 		} else {
-			userCustomValidator.validate(newUser, result);
+//			userCustomValidator.validate(newUser, result);
+			if(!newUser.getPassword().equals(newUser.getConfirmPassword())) {
+				return new ResponseEntity<RESTError>(new RESTError(1, "Password and confirmPassword must be the same"), HttpStatus.NOT_ACCEPTABLE);
+		} 
 		}
-
-	
-//				UserEntity user = userDAOImpl.createNewUser(newUser, roleId);
-		UserEntity user = new UserEntity();
-		//if(newUserDTO.getPassword().equals(newUserDTO.getConfirmPassword())) {
-			user.setPassword(newUser.getPassword());
-//			} else {
-//				return null;
-//				}
-		user.setUsername(newUser.getUsername());
-		user.setName(newUser.getName());
-		user.setLastname(newUser.getLastname());
-		user.setEmail(newUser.getEmail());
-		user.setActive(newUser.isActive());
-		RoleEntity role = roleRepository.findById(roleId).get();
-		user.setRole(role);
-		userRepository.save(user);
+			
+				UserEntity user = userDAOImpl.createNewUser(newUser, roleId);
 		
 				if(user.getRole().equals(roleRepository.findById(11).get())) {
 					TeacherEntity teacher = new TeacherEntity();
@@ -120,6 +114,9 @@ public class UserController {
 					teacher.setActive(newUser.isActive());
 					teacher.setRole(roleRepository.findById(roleId).get());
 					teacherRepository.save(teacher);
+					logger.info("Admin with id:" + teacher.getId() 
+					+ ", lastname and name: " + teacher.getLastname() + " " + teacher.getName() 
+					+ " has been created!");
 				}
 				if(user.getRole().equals(roleRepository.findById(12).get())) {
 					TeacherEntity teacher = new TeacherEntity();
@@ -131,6 +128,9 @@ public class UserController {
 					teacher.setActive(newUser.isActive());
 					teacher.setRole(roleRepository.findById(roleId).get());
 					teacherRepository.save(teacher);
+					logger.info("Teacher with id:" + teacher.getId() 
+					+ ", lastname and name: " + teacher.getLastname() + " " + teacher.getName() 
+					+ " has been created!");
 				}
 				if(user.getRole().equals(roleRepository.findById(13).get())) {
 					StudentEntity student = new StudentEntity();
@@ -142,6 +142,9 @@ public class UserController {
 					student.setActive(newUser.isActive());
 					student.setRole(roleRepository.findById(roleId).get());
 					studentRepository.save(student);
+					logger.info("Student with id:" + student.getId() 
+					+ ", lastname and name: " + student.getLastname() + " " + student.getName() 
+					+ " has been created!");
 				}
 				if(user.getRole().equals(roleRepository.findById(14).get())) {
 					ParentEntity parent = new ParentEntity();
@@ -152,33 +155,29 @@ public class UserController {
 					parent.setEmail(newUser.getEmail());
 					parent.setActive(newUser.isActive());
 					parent.setRole(roleRepository.findById(roleId).get());
-//					return parent;
+					parentRepository.save(parent);
+					logger.info("Parent with id:" + parent.getId() 
+					+ ", lastname and name: " + parent.getLastname() + " " + parent.getName() 
+					+ " has been created!");
 				}
+				logger.info("User with id:" + user.getId() 
+							+ ", lastname and name: " + user.getLastname() + " " + user.getName() 
+							+ " has been created!");
 		return new ResponseEntity<UserEntity>(user, HttpStatus.OK);
 			
 	
 	}
 
-	private String createErrorMessage(BindingResult result) {
-		return result.getAllErrors().stream().map(ObjectError::getDefaultMessage).collect(Collectors.joining(" \n"));
-	}
-	
-
-	@ResponseStatus(HttpStatus.BAD_REQUEST)
-	@ExceptionHandler(MethodArgumentNotValidException.class)
-	public Map<String, String> handleValidationExceptions(MethodArgumentNotValidException ex) {
-		Map<String, String> errors = new HashMap<>();
-		ex.getBindingResult().getAllErrors().forEach((error) -> {
-			String fieldName = ((FieldError) error).getField();
-			String errorMessage = error.getDefaultMessage();
-			errors.put(fieldName, errorMessage);
-		});
-		return errors;
-	}
-
+	@Secured("ROLE_ADMIN")
 	@PatchMapping("/changeUser/userId/{userId}/roleId/{roleId}")
 	public ResponseEntity<?> changeUser(@PathVariable Integer userId, @PathVariable Integer roleId,
-			@RequestBody UserEntityDTO changedUser) {
+			@Valid @RequestBody UserEntityDTO changedUser, BindingResult result) {
+		
+		if(result.hasErrors()) {
+			return new ResponseEntity<>(createErrorMessage(result), HttpStatus.NO_CONTENT);
+		} else {
+			userCustomValidator.validate(changedUser, result);
+		}
 
 		UserEntity user = userDAOImpl.changeUser(userId, roleId, changedUser);
 
@@ -198,6 +197,9 @@ public class UserController {
 				teacher.setActive(changedUser.isActive());
 			teacher.setRole(roleRepository.findById(roleId).get());
 			teacherRepository.save(teacher);
+			logger.info("Admin with id:" + teacher.getId() 
+			+ ", lastname and name: " + teacher.getLastname() + " " + teacher.getName() 
+			+ " has been updated!");
 		}
 		if (user.getRole().equals(roleRepository.findById(12).get())) {
 			TeacherEntity teacher = teacherRepository.findByUsername(user.getUsername());
@@ -215,6 +217,9 @@ public class UserController {
 				teacher.setActive(changedUser.isActive());
 			teacher.setRole(roleRepository.findById(roleId).get());
 			teacherRepository.save(teacher);
+			logger.info("Teacher with id:" + teacher.getId() 
+			+ ", lastname and name: " + teacher.getLastname() + " " + teacher.getName() 
+			+ " has been updated!");
 		}
 		if (user.getRole().equals(roleRepository.findById(13).get())) {
 			StudentEntity student = studentRepository.findByUsername(user.getUsername());
@@ -232,6 +237,9 @@ public class UserController {
 				student.setActive(changedUser.isActive());
 			student.setRole(roleRepository.findById(roleId).get());
 			studentRepository.save(student);
+			logger.info("Student with id:" + student.getId() 
+			+ ", lastname and name: " + student.getLastname() + " " + student.getName() 
+			+ " has been updated!");
 		}
 		if (user.getRole().equals(roleRepository.findById(14).get())) {
 			ParentEntity parent = parentRepository.findByUsername(user.getUsername());
@@ -249,10 +257,41 @@ public class UserController {
 				parent.setActive(changedUser.isActive());
 			parent.setRole(roleRepository.findById(roleId).get());
 			parentRepository.save(parent);
+			logger.info("Parent with id:" + parent.getId() 
+			+ ", lastname and name: " + parent.getLastname() + " " + parent.getName() 
+			+ " has been updated!");
 		}
+		logger.info("User with id:" + user.getId() 
+		+ ", lastname and name: " + user.getLastname() + " " + user.getName() 
+		+ " has been updated!");
 		return new ResponseEntity<UserEntity>(user, HttpStatus.OK);
 
 	}
 	
+	public ResponseEntity<?> deleteUser() {
+		return null;
+	}
+	
+	@Secured("ROLE_PARENT")
+	@GetMapping("/findByLogin")
+	public String getUsername(HttpServletRequest request) {
+		return userDAOImpl.getUsername(request);
+	}
+	
+	private String createErrorMessage(BindingResult result) {
+		return result.getAllErrors().stream().map(ObjectError::getDefaultMessage).collect(Collectors.joining(" \n"));
+	}
+	
 
+	@ResponseStatus(HttpStatus.BAD_REQUEST)
+	@ExceptionHandler(MethodArgumentNotValidException.class)
+	public Map<String, String> handleValidationExceptions(MethodArgumentNotValidException ex) {
+		Map<String, String> errors = new HashMap<>();
+		ex.getBindingResult().getAllErrors().forEach((error) -> {
+			String fieldName = ((FieldError) error).getField();
+			String errorMessage = error.getDefaultMessage();
+			errors.put(fieldName, errorMessage);
+		});
+		return errors;
+	}
 }
