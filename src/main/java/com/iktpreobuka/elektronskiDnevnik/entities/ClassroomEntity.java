@@ -32,7 +32,7 @@ public class ClassroomEntity {
 	@NotNull(message = "ClassroomMark must not be null!")
 	private Integer classroomMark;
 	
-	@OneToMany(mappedBy = "classroom", cascade = CascadeType.REFRESH, fetch = FetchType.LAZY)
+	@OneToMany(mappedBy = "classroom", cascade = CascadeType.REFRESH, fetch = FetchType.LAZY, orphanRemoval = true)
 	@JsonIgnore
 	private List<StudentEntity> students;
 	

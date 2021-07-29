@@ -25,7 +25,7 @@ public class TeacherSubjectClassroom {
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Integer id;
 	
-	@OneToMany(mappedBy = "teacherSubjectClassroom", cascade = CascadeType.REFRESH, fetch = FetchType.LAZY)
+	@OneToMany(mappedBy = "teacherSubjectClassroom", cascade = CascadeType.REFRESH, fetch = FetchType.LAZY, orphanRemoval = true)
 	@JsonIgnore
 	private List<GradeEntity> grades;
 	

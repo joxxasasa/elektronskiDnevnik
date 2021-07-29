@@ -35,7 +35,26 @@ public class GradeDAOImpl implements GradeDAO{
 		return grade;
 	}
 	
+	public GradeEntity deleteGrade(Integer gradeId) {
+		GradeEntity grade = gradeRepository.findById(gradeId).get();
+		gradeRepository.delete(grade);
+		return grade;
+	}
 	
+	public GradeEntity updateGrade(Integer gradeId, GradeEntityDTO changedGradeDTO) {
+		GradeEntity grade = gradeRepository.findById(gradeId).get();
+		grade.setDate(LocalDate.now());
+		if(changedGradeDTO.getSemester() != null) {
+			grade.setSemester(changedGradeDTO.getSemester());
+		}
+		if(changedGradeDTO.getValue() != null) {
+			grade.setValue(changedGradeDTO.getValue());
+		}
+		grade.setStudent(grade.getStudent());
+		grade.setTeacherSubjectClassroom(grade.getTeacherSubjectClassroom());
+		gradeRepository.save(grade);
+		return grade;
+	}
 	
 
 }

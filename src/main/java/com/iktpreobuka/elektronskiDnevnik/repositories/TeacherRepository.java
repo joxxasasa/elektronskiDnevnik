@@ -14,6 +14,7 @@ public interface TeacherRepository extends CrudRepository<TeacherEntity, Integer
 	public TeacherEntity findByUsername(String username);
 	//public List<TeacherEntity> findByTeacherSubjectsSubjectIdTeacherSubjectClassroomClassroomId(Integer classroomId, Integer subjectId);
 	public List<TeacherEntity> findByTeacherSubjectsSubjectId(Integer subjectId);
+
 	
 
 }

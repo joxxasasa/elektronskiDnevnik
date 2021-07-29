@@ -11,5 +11,6 @@ public interface GradeRepository extends CrudRepository<GradeEntity, Integer>{
 	
 //	public List<GradeEntity> findAllByTeacherSubjectClassroomIdByTeacher_SubjectIdByTeacherId(Integer id);
 	public List<GradeEntity> findByStudentId(Integer studentId);
+	public List<GradeEntity> findByTeacherSubjectClassroomId(Integer teacherSubjectClassroomId);
 
 }

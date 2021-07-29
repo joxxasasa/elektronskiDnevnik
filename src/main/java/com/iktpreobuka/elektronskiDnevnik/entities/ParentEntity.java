@@ -14,7 +14,7 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 public class ParentEntity extends UserEntity{
 	
 	@JsonManagedReference
-	@OneToOne(mappedBy = "parent", cascade = CascadeType.REFRESH, fetch = FetchType.LAZY)
+	@OneToOne(mappedBy = "parent", cascade = CascadeType.REFRESH, fetch = FetchType.LAZY, orphanRemoval = true)
 	private StudentEntity student;
 
 	public ParentEntity() {

@@ -21,7 +21,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 public class StudentEntity extends UserEntity{
 	
 	@JsonBackReference
-	@OneToOne(cascade = CascadeType.REFRESH, fetch = FetchType.LAZY)
+	@OneToOne(cascade = CascadeType.REFRESH, fetch = FetchType.LAZY, orphanRemoval = true)
 	@JoinColumn(name = "parent")
 	private ParentEntity parent;
 	
@@ -29,7 +29,7 @@ public class StudentEntity extends UserEntity{
 	@JoinColumn(name = "classroom")
 	private ClassroomEntity classroom;
 	
-	@OneToMany(mappedBy = "student", cascade = CascadeType.REFRESH, fetch = FetchType.LAZY)
+	@OneToMany(mappedBy = "student", cascade = CascadeType.REFRESH, fetch = FetchType.LAZY, orphanRemoval = true)
 	@JsonIgnore
 	private List<GradeEntity> grades;
 	

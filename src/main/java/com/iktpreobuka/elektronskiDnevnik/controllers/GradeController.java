@@ -15,10 +15,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -141,7 +143,87 @@ public class GradeController {
 //					HttpStatus.INTERNAL_SERVER_ERROR);
 //		}
 //	}
+	
+	@Secured("ROLE_ADMIN")
+	@DeleteMapping("/deleteGradeAdmin/{gradeId}")
+	public ResponseEntity<?> deleteGradeAdmin(@PathVariable Integer gradeId) {
+		try {
+			if (gradeRepository.existsById(gradeId)) {
+				GradeEntity grade = gradeRepository.findById(gradeId).get();
+				gradeDAO.deleteGrade(gradeId);
+					logger.info("The grade with id: " + gradeId + " has been deleted!");
+					return new ResponseEntity<GradeEntity>(grade, HttpStatus.OK);
+					} return new ResponseEntity<RESTError>(new RESTError(1, "Grade can not be found!"), HttpStatus.NOT_FOUND);
+		} catch (Exception e) {
+			return new ResponseEntity<RESTError>(
+					new RESTError(2, "While requesting user from DB error ocured. Error message " + e.getMessage()
+							+ e.getStackTrace() + ".\n Stack trace:	"),
+					HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
 
+	@Secured("ROLE_TEACHER")
+	@DeleteMapping("/deleteGradeTeacher/{gradeId}")
+	public ResponseEntity<?> deleteGradeTeacher(@PathVariable Integer gradeId, HttpServletRequest request) {
+		try {
+			if (gradeRepository.existsById(gradeId)) {
+				TeacherEntity teacher = teacherRepository.findByUsername(userDAO.getUsername(request));
+				GradeEntity grade = gradeRepository.findById(gradeId).get();
+				if(grade.getTeacherSubjectClassroom().getTeacherSubject().getTeacher().getId()
+						.equals(teacher.getId())) {
+				gradeDAO.deleteGrade(gradeId);
+					logger.info("The grade with id: " + gradeId + " has been deleted!");
+					return new ResponseEntity<GradeEntity>(grade, HttpStatus.OK);
+				} return new ResponseEntity<RESTError>(new RESTError(3, "Grade is not created by this teacher!"), HttpStatus.NOT_FOUND);
+					} return new ResponseEntity<RESTError>(new RESTError(1, "Grade can not be found!"), HttpStatus.NOT_FOUND);
+		} catch (Exception e) {
+			return new ResponseEntity<RESTError>(
+					new RESTError(2, "While requesting user from DB error ocured. Error message " + e.getMessage()
+							+ e.getStackTrace() + ".\n Stack trace:	"),
+					HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+	
+	@Secured("ROLE_ADMIN")
+	@PutMapping("/updateGradeAdmin/{gradeId}")
+	public ResponseEntity<?> updateGradeAdmin(@PathVariable Integer gradeId, @RequestBody GradeEntityDTO changedGradeDTO) {
+		try {
+			if (gradeRepository.existsById(gradeId)) {
+				GradeEntity grade = gradeRepository.findById(gradeId).get();
+				gradeDAO.updateGrade(gradeId, changedGradeDTO);
+					logger.info("The grade with id: " + gradeId + " has been updated!");
+					return new ResponseEntity<GradeEntity>(grade, HttpStatus.OK);
+					} return new ResponseEntity<RESTError>(new RESTError(1, "Grade can not be found!"), HttpStatus.NOT_FOUND);
+		} catch (Exception e) {
+			return new ResponseEntity<RESTError>(
+					new RESTError(2, "While requesting user from DB error ocured. Error message " + e.getMessage()
+							+ e.getStackTrace() + ".\n Stack trace:	"),
+					HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+	
+	@Secured("ROLE_TEACHER")
+	@PutMapping("/updateGradeTeacher/{gradeId}")
+	public ResponseEntity<?> updateGradeTeacher(@PathVariable Integer gradeId, @RequestBody GradeEntityDTO changedGradeDTO,
+												HttpServletRequest request) {
+		try {
+			if (gradeRepository.existsById(gradeId)) {
+				TeacherEntity teacher = teacherRepository.findByUsername(userDAO.getUsername(request));
+				GradeEntity grade = gradeRepository.findById(gradeId).get();
+				if(grade.getTeacherSubjectClassroom().getTeacherSubject().getTeacher().getId()
+						.equals(teacher.getId())) {
+				gradeDAO.updateGrade(gradeId, changedGradeDTO);
+					logger.info("The grade with id: " + gradeId + " has been updated!");
+					return new ResponseEntity<GradeEntity>(grade, HttpStatus.OK);
+				} return new ResponseEntity<RESTError>(new RESTError(3, "Grade is not created by this teacher!"), HttpStatus.NOT_FOUND);
+					} return new ResponseEntity<RESTError>(new RESTError(1, "Grade can not be found!"), HttpStatus.NOT_FOUND);
+		} catch (Exception e) {
+			return new ResponseEntity<RESTError>(
+					new RESTError(2, "While requesting user from DB error ocured. Error message " + e.getMessage()
+							+ e.getStackTrace() + ".\n Stack trace:	"),
+					HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
 	
 	@ResponseStatus(HttpStatus.BAD_REQUEST)
 	@ExceptionHandler(MethodArgumentNotValidException.class)
