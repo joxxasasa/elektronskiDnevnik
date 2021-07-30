@@ -28,6 +28,7 @@ public class UserEntity {
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	protected Integer id;
 	
+	@Column(unique = true)
 	protected String username;
 
 	@JsonIgnore

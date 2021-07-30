@@ -49,7 +49,7 @@ import com.iktpreobuka.elektronskiDnevnik.services.UserDAO;
 public class GradeController {
 
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
-	
+
 	@Autowired
 	private GradeRepository gradeRepository;
 
@@ -64,34 +64,33 @@ public class GradeController {
 
 	@Autowired
 	private EmailService emailService;
-	
+
 	@Autowired
 	private UserDAO userDAO;
-	
+
 	@Autowired
 	private TeacherRepository teacherRepository;
-	
+
 	@Autowired
 	private ParentRepository parentRepository;
-	
+
 	@Autowired
 	private TeacherSubjectRepository teacherSubjectRepository;
 
-	@Secured("ROLE_TEACHER")
-	@PostMapping("/createGrade/studentId/{studentId}")
-	public ResponseEntity<?> createGrade(@PathVariable Integer studentId, @Valid @RequestBody GradeEntityDTO newGradeDTO, 
-											HttpServletRequest request) {
-		
+	@Secured("ROLE_ADMIN")
+	@PostMapping("/createGradeAdmin/studentId/{studentId}/subjectId/{subjectId}")
+	public ResponseEntity<?> createGradeAdmin(@PathVariable Integer studentId, @PathVariable Integer subjectId,
+			@Valid @RequestBody GradeEntityDTO newGradeDTO, HttpServletRequest request) {
+
 		try {
 			if (studentRepository.existsById(studentId)) {
 				StudentEntity student = studentRepository.findById(studentId).get();
-				TeacherEntity teacher = teacherRepository.findByUsername(userDAO.getUsername(request));
-				TeacherSubject teacherSubject = teacherSubjectRepository.findByTeacherId(teacher.getId());
-//				TeacherSubjectClassroom teacherSubjectClassroom = teacherSubjectClassroomRepository.findByTeacherSubjectId(teacherSubject.getId());
+				TeacherSubject teacherSubject = teacherSubjectRepository.findBySubjectId(subjectId);
 				TeacherSubjectClassroom teacherSubjectClassroom = teacherSubjectClassroomRepository
-																	.findByTeacherSubjectIdAndClassroomId(teacherSubject.getId(), student.getClassroom().getId());
-					if(student.getClassroom().equals(teacherSubjectClassroom.getClassroom())) {
-					GradeEntity grade = gradeDAO.gradingStudent(studentId, teacherSubjectClassroom.getId(), newGradeDTO);
+						.findByTeacherSubjectIdAndClassroomId(teacherSubject.getId(), student.getClassroom().getId());
+				if (student.getClassroom().equals(teacherSubjectClassroom.getClassroom())) {
+					GradeEntity grade = gradeDAO.gradingStudent(studentId, teacherSubjectClassroom.getId(),
+							newGradeDTO);
 					try {
 						emailService.sendGradeInfo(grade);
 					} catch (Exception e) {
@@ -100,7 +99,46 @@ public class GradeController {
 					}
 					logger.info("The grade with id: " + grade.getId() + " has been made and info email has been sent!");
 					return new ResponseEntity<GradeEntity>(grade, HttpStatus.OK);
-					} return new ResponseEntity<RESTError>(new RESTError(3, "Teacher do not teach in this classroom!"), HttpStatus.NOT_ACCEPTABLE);
+				}
+				return new ResponseEntity<RESTError>(new RESTError(3, "Teacher do not teach in this classroom!"),
+						HttpStatus.NOT_ACCEPTABLE);
+			}
+			return new ResponseEntity<RESTError>(new RESTError(1, "Student can not be found"), HttpStatus.NO_CONTENT);
+		} catch (Exception e) {
+			return new ResponseEntity<RESTError>(
+					new RESTError(2, "While requesting user from DB error ocured. Error message " + e.getMessage()
+							+ e.getStackTrace() + ".\n Stack trace:	"),
+					HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	@Secured("ROLE_TEACHER")
+	@PostMapping("/createGrade/studentId/{studentId}")
+	public ResponseEntity<?> createGrade(@PathVariable Integer studentId,
+			@Valid @RequestBody GradeEntityDTO newGradeDTO, HttpServletRequest request) {
+
+		try {
+			if (studentRepository.existsById(studentId)) {
+				StudentEntity student = studentRepository.findById(studentId).get();
+				TeacherEntity teacher = teacherRepository.findByUsername(userDAO.getUsername(request));
+				TeacherSubject teacherSubject = teacherSubjectRepository.findByTeacherId(teacher.getId());
+//				TeacherSubjectClassroom teacherSubjectClassroom = teacherSubjectClassroomRepository.findByTeacherSubjectId(teacherSubject.getId());
+				TeacherSubjectClassroom teacherSubjectClassroom = teacherSubjectClassroomRepository
+						.findByTeacherSubjectIdAndClassroomId(teacherSubject.getId(), student.getClassroom().getId());
+				if (student.getClassroom().equals(teacherSubjectClassroom.getClassroom())) {
+					GradeEntity grade = gradeDAO.gradingStudent(studentId, teacherSubjectClassroom.getId(),
+							newGradeDTO);
+					try {
+						emailService.sendGradeInfo(grade);
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					logger.info("The grade with id: " + grade.getId() + " has been made and info email has been sent!");
+					return new ResponseEntity<GradeEntity>(grade, HttpStatus.OK);
+				}
+				return new ResponseEntity<RESTError>(new RESTError(3, "Teacher do not teach in this classroom!"),
+						HttpStatus.NOT_ACCEPTABLE);
 			}
 			return new ResponseEntity<RESTError>(new RESTError(1, "Student can not be found"), HttpStatus.NO_CONTENT);
 		} catch (Exception e) {
@@ -143,7 +181,7 @@ public class GradeController {
 //					HttpStatus.INTERNAL_SERVER_ERROR);
 //		}
 //	}
-	
+
 	@Secured("ROLE_ADMIN")
 	@DeleteMapping("/deleteGradeAdmin/{gradeId}")
 	public ResponseEntity<?> deleteGradeAdmin(@PathVariable Integer gradeId) {
@@ -151,9 +189,10 @@ public class GradeController {
 			if (gradeRepository.existsById(gradeId)) {
 				GradeEntity grade = gradeRepository.findById(gradeId).get();
 				gradeDAO.deleteGrade(gradeId);
-					logger.info("The grade with id: " + gradeId + " has been deleted!");
-					return new ResponseEntity<GradeEntity>(grade, HttpStatus.OK);
-					} return new ResponseEntity<RESTError>(new RESTError(1, "Grade can not be found!"), HttpStatus.NOT_FOUND);
+				logger.info("The grade with id: " + gradeId + " has been deleted!");
+				return new ResponseEntity<GradeEntity>(grade, HttpStatus.OK);
+			}
+			return new ResponseEntity<RESTError>(new RESTError(1, "Grade can not be found!"), HttpStatus.NOT_FOUND);
 		} catch (Exception e) {
 			return new ResponseEntity<RESTError>(
 					new RESTError(2, "While requesting user from DB error ocured. Error message " + e.getMessage()
@@ -169,13 +208,16 @@ public class GradeController {
 			if (gradeRepository.existsById(gradeId)) {
 				TeacherEntity teacher = teacherRepository.findByUsername(userDAO.getUsername(request));
 				GradeEntity grade = gradeRepository.findById(gradeId).get();
-				if(grade.getTeacherSubjectClassroom().getTeacherSubject().getTeacher().getId()
+				if (grade.getTeacherSubjectClassroom().getTeacherSubject().getTeacher().getId()
 						.equals(teacher.getId())) {
-				gradeDAO.deleteGrade(gradeId);
+					gradeDAO.deleteGrade(gradeId);
 					logger.info("The grade with id: " + gradeId + " has been deleted!");
 					return new ResponseEntity<GradeEntity>(grade, HttpStatus.OK);
-				} return new ResponseEntity<RESTError>(new RESTError(3, "Grade is not created by this teacher!"), HttpStatus.NOT_FOUND);
-					} return new ResponseEntity<RESTError>(new RESTError(1, "Grade can not be found!"), HttpStatus.NOT_FOUND);
+				}
+				return new ResponseEntity<RESTError>(new RESTError(3, "Grade is not created by this teacher!"),
+						HttpStatus.NOT_FOUND);
+			}
+			return new ResponseEntity<RESTError>(new RESTError(1, "Grade can not be found!"), HttpStatus.NOT_FOUND);
 		} catch (Exception e) {
 			return new ResponseEntity<RESTError>(
 					new RESTError(2, "While requesting user from DB error ocured. Error message " + e.getMessage()
@@ -183,17 +225,19 @@ public class GradeController {
 					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
-	
+
 	@Secured("ROLE_ADMIN")
 	@PutMapping("/updateGradeAdmin/{gradeId}")
-	public ResponseEntity<?> updateGradeAdmin(@PathVariable Integer gradeId, @RequestBody GradeEntityDTO changedGradeDTO) {
+	public ResponseEntity<?> updateGradeAdmin(@PathVariable Integer gradeId,
+			@RequestBody GradeEntityDTO changedGradeDTO) {
 		try {
 			if (gradeRepository.existsById(gradeId)) {
 				GradeEntity grade = gradeRepository.findById(gradeId).get();
 				gradeDAO.updateGrade(gradeId, changedGradeDTO);
-					logger.info("The grade with id: " + gradeId + " has been updated!");
-					return new ResponseEntity<GradeEntity>(grade, HttpStatus.OK);
-					} return new ResponseEntity<RESTError>(new RESTError(1, "Grade can not be found!"), HttpStatus.NOT_FOUND);
+				logger.info("The grade with id: " + gradeId + " has been updated!");
+				return new ResponseEntity<GradeEntity>(grade, HttpStatus.OK);
+			}
+			return new ResponseEntity<RESTError>(new RESTError(1, "Grade can not be found!"), HttpStatus.NOT_FOUND);
 		} catch (Exception e) {
 			return new ResponseEntity<RESTError>(
 					new RESTError(2, "While requesting user from DB error ocured. Error message " + e.getMessage()
@@ -201,22 +245,25 @@ public class GradeController {
 					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
-	
+
 	@Secured("ROLE_TEACHER")
 	@PutMapping("/updateGradeTeacher/{gradeId}")
-	public ResponseEntity<?> updateGradeTeacher(@PathVariable Integer gradeId, @RequestBody GradeEntityDTO changedGradeDTO,
-												HttpServletRequest request) {
+	public ResponseEntity<?> updateGradeTeacher(@PathVariable Integer gradeId,
+			@RequestBody GradeEntityDTO changedGradeDTO, HttpServletRequest request) {
 		try {
 			if (gradeRepository.existsById(gradeId)) {
 				TeacherEntity teacher = teacherRepository.findByUsername(userDAO.getUsername(request));
 				GradeEntity grade = gradeRepository.findById(gradeId).get();
-				if(grade.getTeacherSubjectClassroom().getTeacherSubject().getTeacher().getId()
+				if (grade.getTeacherSubjectClassroom().getTeacherSubject().getTeacher().getId()
 						.equals(teacher.getId())) {
-				gradeDAO.updateGrade(gradeId, changedGradeDTO);
+					gradeDAO.updateGrade(gradeId, changedGradeDTO);
 					logger.info("The grade with id: " + gradeId + " has been updated!");
 					return new ResponseEntity<GradeEntity>(grade, HttpStatus.OK);
-				} return new ResponseEntity<RESTError>(new RESTError(3, "Grade is not created by this teacher!"), HttpStatus.NOT_FOUND);
-					} return new ResponseEntity<RESTError>(new RESTError(1, "Grade can not be found!"), HttpStatus.NOT_FOUND);
+				}
+				return new ResponseEntity<RESTError>(new RESTError(3, "Grade is not created by this teacher!"),
+						HttpStatus.NOT_FOUND);
+			}
+			return new ResponseEntity<RESTError>(new RESTError(1, "Grade can not be found!"), HttpStatus.NOT_FOUND);
 		} catch (Exception e) {
 			return new ResponseEntity<RESTError>(
 					new RESTError(2, "While requesting user from DB error ocured. Error message " + e.getMessage()
@@ -224,7 +271,7 @@ public class GradeController {
 					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
-	
+
 	@ResponseStatus(HttpStatus.BAD_REQUEST)
 	@ExceptionHandler(MethodArgumentNotValidException.class)
 	public Map<String, String> handleValidationExceptions(MethodArgumentNotValidException ex) {
@@ -236,7 +283,7 @@ public class GradeController {
 		});
 		return errors;
 	}
-	
+
 	@Secured("ROLE_TEACHER")
 	@GetMapping("/findAllGrades")
 	public ResponseEntity<?> getAllGrades() {
@@ -247,12 +294,13 @@ public class GradeController {
 			}
 			return new ResponseEntity<RESTError>(new RESTError(1, "List of grades is empty!"), HttpStatus.NO_CONTENT);
 		} catch (Exception e) {
-			return new ResponseEntity<RESTError>(new RESTError(2, 
-					"While requesting user from DB error ocured. Error message " + e.getMessage() + e.getStackTrace() 
-					+ ".\n Stack trace:	"), HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<RESTError>(
+					new RESTError(2, "While requesting user from DB error ocured. Error message " + e.getMessage()
+							+ e.getStackTrace() + ".\n Stack trace:	"),
+					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
-	
+
 //	@Secured("ROLE_TEACHER")
 //	@GetMapping("/findAllGradesByTeacher/{teacherId}")
 //	public ResponseEntity<?> findAllGradesByTeacher(@PathVariable Integer teacherId) {
@@ -268,7 +316,7 @@ public class GradeController {
 //					+ ".\n Stack trace:	"), HttpStatus.INTERNAL_SERVER_ERROR);
 //		}
 //	}
-	
+
 //	@Secured("ROLE_STUDENT")
 //	@GetMapping("/findAllGrades/{studentId}")
 //	public ResponseEntity<?> getAllGradesByStudent(@PathVariable Integer studentId) {
@@ -285,13 +333,13 @@ public class GradeController {
 //					+ ".\n Stack trace:	"), HttpStatus.INTERNAL_SERVER_ERROR);
 //		}
 //	}
-	
+
 	@Secured("ROLE_STUDENT")
 	@GetMapping("/findAllGradesStudent")
 	public ResponseEntity<?> getAllGradesByStudent(HttpServletRequest request) {
-		
+
 		StudentEntity student = studentRepository.findByUsername(userDAO.getUsername(request));
-	
+
 		try {
 			List<GradeEntity> grades = (List<GradeEntity>) gradeRepository.findByStudentId(student.getId());
 			if (!grades.isEmpty()) {
@@ -299,19 +347,36 @@ public class GradeController {
 			}
 			return new ResponseEntity<RESTError>(new RESTError(1, "List of grades is empty!"), HttpStatus.NO_CONTENT);
 		} catch (Exception e) {
-			return new ResponseEntity<RESTError>(new RESTError(2, 
-					"While requesting user from DB error ocured. Error message " + e.getMessage() + e.getStackTrace() 
-					+ ".\n Stack trace:	"), HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<RESTError>(
+					new RESTError(2, "While requesting user from DB error ocured. Error message " + e.getMessage()
+							+ e.getStackTrace() + ".\n Stack trace:	"),
+					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
-	
+
+	@Secured("ROLE_STUDENT")
+	@GetMapping("/getReportStudent")
+	public ResponseEntity<?> generateGradeReportStudent(HttpServletRequest request) {
+
+		try {
+			StudentEntity student = studentRepository.findByUsername(userDAO.getUsername(request));
+			return new ResponseEntity<>(gradeDAO.generateGradeReport(student.getId()), HttpStatus.OK);
+		} catch (Exception e) {
+			return new ResponseEntity<RESTError>(
+					new RESTError(2, "While requesting user from DB error ocured. Error message " + e.getMessage()
+							+ e.getStackTrace() + ".\n Stack trace:	"),
+					HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+
+	}
+
 	@Secured("ROLE_PARENT")
 	@GetMapping("/findAllGradesParent")
 	public ResponseEntity<?> getAllGradesByParent(HttpServletRequest request) {
-		
+
 		ParentEntity parent = parentRepository.findByUsername(userDAO.getUsername(request));
 		StudentEntity student = studentRepository.findByParentId(parent.getId());
-	
+
 		try {
 			List<GradeEntity> grades = (List<GradeEntity>) gradeRepository.findByStudentId(student.getId());
 			if (!grades.isEmpty()) {
@@ -319,9 +384,27 @@ public class GradeController {
 			}
 			return new ResponseEntity<RESTError>(new RESTError(1, "List of grades is empty!"), HttpStatus.NO_CONTENT);
 		} catch (Exception e) {
-			return new ResponseEntity<RESTError>(new RESTError(2, 
-					"While requesting user from DB error ocured. Error message " + e.getMessage() + e.getStackTrace() 
-					+ ".\n Stack trace:	"), HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<RESTError>(
+					new RESTError(2, "While requesting user from DB error ocured. Error message " + e.getMessage()
+							+ e.getStackTrace() + ".\n Stack trace:	"),
+					HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	@Secured("ROLE_PARENT")
+	@GetMapping("/getReportParent")
+	public ResponseEntity<?> generateGradeReportParent(HttpServletRequest request) {
+
+		try {
+			ParentEntity parent = parentRepository.findByUsername(userDAO.getUsername(request));
+			StudentEntity student = studentRepository.findByParentId(parent.getId());
+			return new ResponseEntity<>(gradeDAO.generateGradeReport(student.getId()), HttpStatus.OK);
+
+		} catch (Exception e) {
+			return new ResponseEntity<RESTError>(
+					new RESTError(2, "While requesting user from DB error ocured. Error message " + e.getMessage()
+							+ e.getStackTrace() + ".\n Stack trace:	"),
+					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 }

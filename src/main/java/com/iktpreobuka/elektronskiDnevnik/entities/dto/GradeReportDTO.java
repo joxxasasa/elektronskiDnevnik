@@ -1,46 +1,32 @@
 package com.iktpreobuka.elektronskiDnevnik.entities.dto;
 
-import java.time.LocalDate;
-
-import com.iktpreobuka.elektronskiDnevnik.entities.SubjectEntity;
+import java.util.List;
 
 public class GradeReportDTO {
 	
-	private Integer value;
+	private Double averageSucces;
 	
-	private SubjectEntity subject;
-	
-	private LocalDate date;
+	private List<GradeItem> grades;
 
 	public GradeReportDTO() {
 		super();
 		// TODO Auto-generated constructor stub
 	}
 
-	public Integer getValue() {
-		return value;
+	public Double getAverageSucces() {
+		return averageSucces;
 	}
 
-	public void setValue(Integer value) {
-		this.value = value;
+	public void setAverageSucces(Double averageSucces) {
+		this.averageSucces = averageSucces;
 	}
 
-	public SubjectEntity getSubject() {
-		return subject;
+	public List<GradeItem> getGrades() {
+		return grades;
 	}
 
-	public void setSubject(SubjectEntity subject) {
-		this.subject = subject;
+	public void setGrades(List<GradeItem> grades) {
+		this.grades = grades;
 	}
-
-	public LocalDate getDate() {
-		return date;
-	}
-
-	public void setDate(LocalDate date) {
-		this.date = date;
-	}
-	
-	
 
 }

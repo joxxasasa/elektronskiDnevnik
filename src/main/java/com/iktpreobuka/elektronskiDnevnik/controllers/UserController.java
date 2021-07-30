@@ -1,5 +1,8 @@
 package com.iktpreobuka.elektronskiDnevnik.controllers;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -50,6 +53,7 @@ import com.iktpreobuka.elektronskiDnevnik.repositories.TeacherRepository;
 import com.iktpreobuka.elektronskiDnevnik.repositories.TeacherSubjectClassroomRepository;
 import com.iktpreobuka.elektronskiDnevnik.repositories.TeacherSubjectRepository;
 import com.iktpreobuka.elektronskiDnevnik.repositories.UserRepository;
+import com.iktpreobuka.elektronskiDnevnik.services.UserDAO;
 import com.iktpreobuka.elektronskiDnevnik.services.UserDAOImpl;
 
 @RestController
@@ -87,6 +91,9 @@ public class UserController {
 
 	@Autowired
 	private GradeRepository gradeRepository;
+	
+	@Autowired
+	private UserDAO userDAO;
 
 	@InitBinder("newUser")
 	protected void initBinder(final WebDataBinder binder) {
@@ -391,6 +398,24 @@ public class UserController {
 		return userDAOImpl.getUsername(request);
 	}
 
+	@Secured("ROLE_ADMIN")
+	@GetMapping("/logsInfo")
+	public ResponseEntity<?> getLogsInfo(HttpServletRequest request) throws IOException {
+		
+		BufferedReader in = new BufferedReader(new FileReader("logs//spring-boot-logging.log"));
+		
+		String line = null;
+		StringBuilder stringBuilder = new StringBuilder();
+		while ((line = in.readLine()) != null) {
+			stringBuilder.append(line);
+			stringBuilder.append("\n");
+		}
+		
+		logger.info(userDAO.getUsername(request) + ": viewed logs.");
+		
+		return new ResponseEntity<>(stringBuilder.toString(), HttpStatus.OK);
+	}
+	
 	private String createErrorMessage(BindingResult result) {
 		return result.getAllErrors().stream().map(ObjectError::getDefaultMessage).collect(Collectors.joining(" \n"));
 	}
