@@ -30,6 +30,7 @@ import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -53,6 +54,10 @@ import com.iktpreobuka.elektronskiDnevnik.repositories.TeacherRepository;
 import com.iktpreobuka.elektronskiDnevnik.repositories.TeacherSubjectClassroomRepository;
 import com.iktpreobuka.elektronskiDnevnik.repositories.TeacherSubjectRepository;
 import com.iktpreobuka.elektronskiDnevnik.repositories.UserRepository;
+import com.iktpreobuka.elektronskiDnevnik.services.ParentDAO;
+import com.iktpreobuka.elektronskiDnevnik.services.StudentDAO;
+import com.iktpreobuka.elektronskiDnevnik.services.SubjectDAO;
+import com.iktpreobuka.elektronskiDnevnik.services.TeacherDAO;
 import com.iktpreobuka.elektronskiDnevnik.services.UserDAO;
 import com.iktpreobuka.elektronskiDnevnik.services.UserDAOImpl;
 
@@ -94,6 +99,15 @@ public class UserController {
 	
 	@Autowired
 	private UserDAO userDAO;
+	
+	@Autowired
+	private TeacherDAO teacherDAO;
+	
+	@Autowired
+	private StudentDAO studentDAO;
+	
+	@Autowired
+	private ParentDAO parentDAO;
 
 	@InitBinder("newUser")
 	protected void initBinder(final WebDataBinder binder) {
@@ -128,56 +142,20 @@ public class UserController {
 		UserEntity user = userDAOImpl.createNewUser(newUser, roleId);
 
 		if (user.getRole().equals(roleRepository.findById(11).get())) {
-			TeacherEntity teacher = new TeacherEntity();
-			teacher.setUsername(newUser.getUsername());
-			teacher.setPassword(newUser.getPassword());
-			teacher.setName(newUser.getName());
-			teacher.setLastname(newUser.getLastname());
-			teacher.setEmail(newUser.getEmail());
-			teacher.setActive(newUser.isActive());
-			teacher.setRole(roleRepository.findById(roleId).get());
-			teacherRepository.save(teacher);
-			logger.info("Admin with id:" + teacher.getId() + ", lastname and name: " + teacher.getLastname() + " "
-					+ teacher.getName() + " has been created!");
+
+			teacherDAO.createAdmin(newUser, roleId);
 		}
 		if (user.getRole().equals(roleRepository.findById(12).get())) {
-			TeacherEntity teacher = new TeacherEntity();
-			teacher.setUsername(newUser.getUsername());
-			teacher.setPassword(newUser.getPassword());
-			teacher.setName(newUser.getName());
-			teacher.setLastname(newUser.getLastname());
-			teacher.setEmail(newUser.getEmail());
-			teacher.setActive(newUser.isActive());
-			teacher.setRole(roleRepository.findById(roleId).get());
-			teacherRepository.save(teacher);
-			logger.info("Teacher with id:" + teacher.getId() + ", lastname and name: " + teacher.getLastname() + " "
-					+ teacher.getName() + " has been created!");
+
+			teacherDAO.createTeacher(newUser, roleId);
 		}
 		if (user.getRole().equals(roleRepository.findById(13).get())) {
-			StudentEntity student = new StudentEntity();
-			student.setUsername(newUser.getUsername());
-			student.setPassword(newUser.getPassword());
-			student.setName(newUser.getName());
-			student.setLastname(newUser.getLastname());
-			student.setEmail(newUser.getEmail());
-			student.setActive(newUser.isActive());
-			student.setRole(roleRepository.findById(roleId).get());
-			studentRepository.save(student);
-			logger.info("Student with id:" + student.getId() + ", lastname and name: " + student.getLastname() + " "
-					+ student.getName() + " has been created!");
+
+			studentDAO.createStudent(user, roleId);
 		}
 		if (user.getRole().equals(roleRepository.findById(14).get())) {
-			ParentEntity parent = new ParentEntity();
-			parent.setUsername(newUser.getUsername());
-			parent.setPassword(newUser.getPassword());
-			parent.setName(newUser.getName());
-			parent.setLastname(newUser.getLastname());
-			parent.setEmail(newUser.getEmail());
-			parent.setActive(newUser.isActive());
-			parent.setRole(roleRepository.findById(roleId).get());
-			parentRepository.save(parent);
-			logger.info("Parent with id:" + parent.getId() + ", lastname and name: " + parent.getLastname() + " "
-					+ parent.getName() + " has been created!");
+
+			parentDAO.createParent(user, roleId);
 		}
 		logger.info("User with id:" + user.getId() + ", lastname and name: " + user.getLastname() + " " + user.getName()
 				+ " has been created!");
@@ -186,7 +164,7 @@ public class UserController {
 	}
 
 	@Secured("ROLE_ADMIN")
-	@PatchMapping("/changeUser/userId/{userId}/roleId/{roleId}")
+	@PutMapping("/changeUser/userId/{userId}/roleId/{roleId}")
 	public ResponseEntity<?> changeUser(@PathVariable Integer userId, @PathVariable Integer roleId,
 			@Valid @RequestBody UserEntityDTO changedUser, BindingResult result) {
 
@@ -199,80 +177,20 @@ public class UserController {
 		UserEntity user = userDAOImpl.changeUser(userId, roleId, changedUser);
 
 		if (user.getRole().equals(roleRepository.findById(11).get())) {
-			TeacherEntity teacher = teacherRepository.findByUsername(user.getUsername());
-			if (changedUser.getUsername() != null)
-				teacher.setUsername(changedUser.getUsername());
-			if (changedUser.getPassword() != null)
-				teacher.setPassword(changedUser.getPassword());
-			if (changedUser.getName() != null)
-				teacher.setName(changedUser.getName());
-			if (changedUser.getLastname() != null)
-				teacher.setLastname(changedUser.getLastname());
-			if (changedUser.getEmail() != null)
-				teacher.setEmail(changedUser.getEmail());
-			if (changedUser.isActive() != false && changedUser.isActive() != true)
-				teacher.setActive(changedUser.isActive());
-			teacher.setRole(roleRepository.findById(roleId).get());
-			teacherRepository.save(teacher);
-			logger.info("Admin with id:" + teacher.getId() + ", lastname and name: " + teacher.getLastname() + " "
-					+ teacher.getName() + " has been updated!");
+
+			teacherDAO.changeAdmin(user, changedUser, roleId);
 		}
 		if (user.getRole().equals(roleRepository.findById(12).get())) {
-			TeacherEntity teacher = teacherRepository.findByUsername(user.getUsername());
-			if (changedUser.getUsername() != null)
-				teacher.setUsername(changedUser.getUsername());
-			if (changedUser.getPassword() != null)
-				teacher.setPassword(changedUser.getPassword());
-			if (changedUser.getName() != null)
-				teacher.setName(changedUser.getName());
-			if (changedUser.getLastname() != null)
-				teacher.setLastname(changedUser.getLastname());
-			if (changedUser.getEmail() != null)
-				teacher.setEmail(changedUser.getEmail());
-			if (changedUser.isActive() != false && changedUser.isActive() != true)
-				teacher.setActive(changedUser.isActive());
-			teacher.setRole(roleRepository.findById(roleId).get());
-			teacherRepository.save(teacher);
-			logger.info("Teacher with id:" + teacher.getId() + ", lastname and name: " + teacher.getLastname() + " "
-					+ teacher.getName() + " has been updated!");
+
+			teacherDAO.changeTeacher(user, changedUser, roleId);
 		}
 		if (user.getRole().equals(roleRepository.findById(13).get())) {
-			StudentEntity student = studentRepository.findByUsername(user.getUsername());
-			if (changedUser.getUsername() != null)
-				student.setUsername(changedUser.getUsername());
-			if (changedUser.getPassword() != null)
-				student.setPassword(changedUser.getPassword());
-			if (changedUser.getName() != null)
-				student.setName(changedUser.getName());
-			if (changedUser.getLastname() != null)
-				student.setLastname(changedUser.getLastname());
-			if (changedUser.getEmail() != null)
-				student.setEmail(changedUser.getEmail());
-			if (changedUser.isActive() != false && changedUser.isActive() != true)
-				student.setActive(changedUser.isActive());
-			student.setRole(roleRepository.findById(roleId).get());
-			studentRepository.save(student);
-			logger.info("Student with id:" + student.getId() + ", lastname and name: " + student.getLastname() + " "
-					+ student.getName() + " has been updated!");
+
+			studentDAO.changeStudent(user, changedUser, roleId);
 		}
 		if (user.getRole().equals(roleRepository.findById(14).get())) {
-			ParentEntity parent = parentRepository.findByUsername(user.getUsername());
-			if (changedUser.getUsername() != null)
-				parent.setUsername(changedUser.getUsername());
-			if (changedUser.getPassword() != null)
-				parent.setPassword(changedUser.getPassword());
-			if (changedUser.getName() != null)
-				parent.setName(changedUser.getName());
-			if (changedUser.getLastname() != null)
-				parent.setLastname(changedUser.getLastname());
-			if (changedUser.getEmail() != null)
-				parent.setEmail(changedUser.getEmail());
-			if (changedUser.isActive() != false && changedUser.isActive() != true)
-				parent.setActive(changedUser.isActive());
-			parent.setRole(roleRepository.findById(roleId).get());
-			parentRepository.save(parent);
-			logger.info("Parent with id:" + parent.getId() + ", lastname and name: " + parent.getLastname() + " "
-					+ parent.getName() + " has been updated!");
+
+			parentDAO.changeParent(user, changedUser, roleId);
 		}
 		logger.info("User with id:" + user.getId() + ", lastname and name: " + user.getLastname() + " " + user.getName()
 				+ " has been updated!");

@@ -284,7 +284,7 @@ public class GradeController {
 		return errors;
 	}
 
-	@Secured("ROLE_TEACHER")
+	@Secured("ROLE_ADMIN")
 	@GetMapping("/findAllGrades")
 	public ResponseEntity<?> getAllGrades() {
 		try {
@@ -302,10 +302,11 @@ public class GradeController {
 	}
 
 //	@Secured("ROLE_TEACHER")
-//	@GetMapping("/findAllGradesByTeacher/{teacherId}")
-//	public ResponseEntity<?> findAllGradesByTeacher(@PathVariable Integer teacherId) {
+//	@GetMapping("/findAllGradesByTeacher")
+//	public ResponseEntity<?> findAllGradesByTeacher(HttpServletRequest request) {
 //		try {
-//			List<GradeEntity> grades = (List<GradeEntity>) gradeRepository.findAllByTeachersSubjectClassroomIdByTeacherSubjectIdByTeacherId(teacherId);
+//			TeacherEntity teacher = teacherRepository.findByUsername(userDAO.getUsername(request));
+//			List<GradeEntity> grades = ;
 //			if (!grades.isEmpty()) {
 //				return new ResponseEntity<List<GradeEntity>>(grades, HttpStatus.OK);
 //			}

@@ -39,11 +39,13 @@ public class TeacherController {
 	@Autowired
 	private ClassroomRepository classroomRepository;
 	
+	@Secured("ROLE_ADMIN")
 	@GetMapping("/")
 	public List<TeacherEntity> getAllTeachers() {
 		return (List<TeacherEntity>) teacherRepository.findAll();
 	}
 	
+	@Secured("ROLE_ADMIN")
 	@GetMapping("/findById/{teacherId}")
 	public ResponseEntity<?> getById(@PathVariable Integer teacherId) {
 		try {
@@ -79,24 +81,7 @@ public class TeacherController {
 		}
 	}
 	
-//	@Secured("ROLE_TEACHER")
-//	@GetMapping("/findAllBySubjectAndClassroom/{subject}/{classroom}")
-//	public ResponseEntity<?> findAllBySubjectAndClassroom(@PathVariable Integer subject, @PathVariable Integer classroom) {
-//		try {
-//			if (subjectRepository.existsById(subject)) {
-//				if(classroomRepository.existsById(classroom)) {
-//				List<TeacherEntity> teachersBySubject = teacherDAO.findTeachersBySubjectAndClassroom(subject, classroom);
-//				return new ResponseEntity<List<TeacherEntity>>(teachersBySubject, HttpStatus.OK);
-//				} return new ResponseEntity<RESTError>(new RESTError(3, "Classroom can not be found"), HttpStatus.NOT_FOUND);
-//			}
-//			return new ResponseEntity<RESTError>(new RESTError(1, "Subject can not be found"),
-//					HttpStatus.NO_CONTENT);
-//		} catch (Exception e) {
-//			return new ResponseEntity<RESTError>(
-//					new RESTError(2, "While requesting user from DB error ocured. Error message " + e.getMessage() +
-//					".\n Stack trace:	"+ e.getStackTrace()), HttpStatus.INTERNAL_SERVER_ERROR);
-//		}
-//	}
+
 
 	@Secured("ROLE_TEACHER")
 	@GetMapping("/findAllBySubjectAndClassroom/{subjectId}/{classroomId}")
@@ -118,9 +103,5 @@ public class TeacherController {
 		}
 	}
 	
-//	@Secured("ROLE_TEACHER")
-//	@GetMapping("/findAllBySubjectAndClassroom/{subjectId}/{classroomId}")
-//	public List<TeacherEntity> findAllBySubjectAndClassroom(@PathVariable Integer subjectId, @PathVariable Integer classroomId) {
-//		return null;
-//	}
+
 }

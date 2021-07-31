@@ -3,6 +3,7 @@ package com.iktpreobuka.elektronskiDnevnik.controllers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -32,6 +33,7 @@ public class TeacherSubjectClassroomController {
 	@Autowired
 	private ClassroomRepository classroomRepository;
 	
+	@Secured("ROLE_ADMIN")
 	@PostMapping("/assignTeacherWithSubjectToClassroom/teacherSubjectId/{teacherSubjectId}/classroomId/{classroomId}")
 	public ResponseEntity<?> assignTeacherWithSubjectToClassroom(@PathVariable Integer teacherSubjectId, 
 																	@PathVariable Integer classroomId) {

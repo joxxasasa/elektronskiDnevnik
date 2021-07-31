@@ -27,6 +27,7 @@ public class UserDAOImpl implements UserDAO{
 		UserEntity user = new UserEntity();
 		
 		user.setUsername(newUserDTO.getUsername());
+		user.setPassword(newUserDTO.getPassword());
 		user.setName(newUserDTO.getName());
 		user.setLastname(newUserDTO.getLastname());
 		user.setEmail(newUserDTO.getEmail());
@@ -62,6 +63,7 @@ public class UserDAOImpl implements UserDAO{
 		if(roleId != null) {
 			user.setRole(roleRepository.findById(roleId).get());
 		}
+		userRepository.save(user);
 		return user;
 	}
 	
